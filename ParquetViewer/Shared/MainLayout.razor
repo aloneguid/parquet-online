@@ -2,14 +2,14 @@
 @using Parquet;
 
 <div class="page">
-    <div class="sidebar">
+    <!--<div class="sidebar">
         <NavMenu />
-    </div>
+    </div>-->
 
     <main>
         <div class="top-row px-4">
-            <sub>based on <strong>Parquet.Net @libVersion</strong></sub>
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            <sub>based on <strong>Parquet.Net @Parquet.Globals.Version</strong></sub>
+            <a href="https://github.com/aloneguid/parquet-online" target="_blank">About</a>
             <a href="https://github.com/aloneguid/parquet-dotnet" target="_blank">Parquet.Net</a>
         </div>
 
@@ -18,7 +18,3 @@
         </article>
     </main>
 </div>
-
-@code {
-    private string? libVersion = typeof(ParquetReader).Assembly.GetName().Version?.ToString();
-}
