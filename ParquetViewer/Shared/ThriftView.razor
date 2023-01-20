@@ -1,0 +1,120 @@
+﻿@using Parquet.Schema;
+
+@if(ThriftMeta != null)
+{
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H3">Raw Thrift Metadata</RadzenText>
+
+        <RadzenCard>
+            @foreach(var rme in GetRootMeta())
+            {
+                <RadzenText TextStyle="TextStyle.Body1">
+                    @rme.Key: <strong>@rme.Value</strong>
+                </RadzenText>
+            }
+
+            @if(ThriftMeta.Key_value_metadata != null && ThriftMeta.Key_value_metadata.Count > 0)
+            {
+                <p>
+                    <RadzenCard>
+                        @foreach(var kve in ThriftMeta.Key_value_metadata)
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                @kve.Key: <strong>@kve.Value</strong>
+                            </RadzenText>
+                        }
+                    </RadzenCard>
+                </p>
+            }
+
+            @foreach(var rg in ThriftMeta.Row_groups)
+            {
+
+                <p>
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.DisplayH4">Row Group</RadzenText>
+                        
+                        @foreach(var rme in GetRgMeta(rg))
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                @rme.Key: <strong>@rme.Value</strong>
+                            </RadzenText>
+                        }
+
+                        <RadzenCard>todo: sorting columns</RadzenCard>
+
+                        <RadzenCard>
+                            <RadzenText TextStyle="TextStyle.DisplayH5">Columns</RadzenText>
+                            @foreach(var cc in rg.Columns)
+                            {
+                                <RadzenCard>
+                                    @foreach (var rme in GetColumnMeta(cc))
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Body2">
+                                            @rme.Key: <strong>@rme.Value</strong>
+                                        </RadzenText>
+                                    }
+                                </RadzenCard>
+                            }
+                        </RadzenCard>
+                    </RadzenCard>
+                </p>
+            }
+        </RadzenCard>
+
+    </RadzenCard>
+}
+
+@code {
+
+    [Parameter]
+    public Parquet.Thrift.FileMetaData? ThriftMeta { get; set; }
+
+    int rgi = 0;
+
+    Dictionary<string, string> GetRootMeta()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Version", ThriftMeta.Version.ToString() },
+            { "Created With", ThriftMeta.Created_by },
+            { "Total Rows", ThriftMeta.Num_rows.ToString() },
+            { "Encryption", ThriftMeta.Encryption_algorithm == null ? "no" : "yes" },
+            { "Row Group Count", ThriftMeta.Row_groups.Count.ToString() }
+        };
+    }
+
+    Dictionary<string, string> GetRgMeta(Parquet.Thrift.RowGroup rg)
+    {
+        return new Dictionary<string, string>
+        {
+            { "Ordinal", rg.Ordinal.ToString() },
+            { "File Offset", rg.File_offset.ToString() },
+            { "Row Count", rg.Num_rows.ToString() },
+            { "Size in Bytes", rg.Total_byte_size.ToString() },
+            { "Compressed Size", rg.Total_compressed_size.ToString() }
+        };
+    }
+
+    Dictionary<string, string> GetColumnMeta(Parquet.Thrift.ColumnChunk cc)
+    {
+        return new Dictionary<string, string>
+        {
+            { "File Path", cc.File_path ?? "" },
+            { "Index Offset", cc.Column_index_offset.ToString() },
+            { "Index Length", cc.Column_index_length.ToString() },
+            { "File Offset", cc.File_offset.ToString() },
+            { "Codec", cc.Meta_data.Codec.ToString() },
+            { "Data Page Offset", cc.Meta_data.Data_page_offset.ToString() },
+            { "Dictionary Page Offset", cc.Meta_data.Dictionary_page_offset.ToString() },
+            { "Index Page Offset", cc.Meta_data.Index_page_offset.ToString() },
+            { "Number of Values", cc.Meta_data.Num_values.ToString() },
+            { "Path in Schema", cc.Meta_data.Path_in_schema == null ? "" : string.Join(".", cc.Meta_data.Path_in_schema) },
+            { "Compressed Size", cc.Meta_data.Total_uncompressed_size.ToString() },
+            { "Uncompressed Size", cc.Meta_data.Total_compressed_size.ToString() },
+            { "Type", cc.Meta_data.Type.ToString() },
+            { "Encodings", cc.Meta_data.Encodings == null ? "" : string.Join(", ", cc.Meta_data.Encodings) },
+        };
+    }
+
+}

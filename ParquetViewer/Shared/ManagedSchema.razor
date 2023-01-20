@@ -1,0 +1,77 @@
+﻿@using Parquet.Schema;
+
+@if(Schema != null)
+{
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H3">Schema</RadzenText>
+        <RadzenText>as Parquet.Net sees it after parsing out from raw schema</RadzenText>
+        <RadzenTree Data=@Schema.Fields Expand=@LoadFields Style="width: 50%; height: 300px">
+            <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate/>
+        </RadzenTree>
+    </RadzenCard>
+}
+
+@code {
+
+    [Parameter]
+    public ParquetSchema? Schema { get; set; }
+
+    void LoadFields(TreeExpandEventArgs args)
+    {
+        if (!(args.Value is Field f)) return;
+
+        args.Children.Text = GetTextForField;
+        args.Children.HasChildren = (field) => ((Field)field).SchemaType != SchemaType.Data;
+        args.Children.Template = FieldTemplate;
+
+        if(f is StructField sf)
+        {
+            args.Children.Data = sf.Fields;
+        }
+        else if(f is ListField lf)
+        {
+            args.Children.Data = new Field[] { lf.Item };
+        }
+        else if(f is MapField mf)
+        {
+            args.Children.Data = new Field[] { mf.Key, mf.Value };
+        }
+        else
+        {
+            args.Children.Data = new Field[0];
+        }
+
+    }
+
+    string GetTextForField(object data)
+    {
+        if (data is Field f) return f.Name;
+        return "none";
+    }
+
+    RenderFragment<RadzenTreeItem> FieldTemplate = (context) => builder =>
+    {
+        if (!(context.Value is Field f)) return;
+
+        string icon;
+        if (f.SchemaType == SchemaType.Data)
+            icon = "description";
+        else if (f.SchemaType == SchemaType.List)
+            icon = "storage";
+        else if (f.SchemaType == SchemaType.Struct)
+            icon = "inventory";
+        else if (f.SchemaType == SchemaType.Map)
+            icon = "near_me";
+        else icon = "help";
+
+        builder.OpenComponent<RadzenIcon>(0);
+        builder.AddAttribute(1, nameof(RadzenIcon.Icon), icon);
+        builder.CloseComponent();
+        builder.AddContent(3, context.Text);
+
+        if(f is DataField df)
+        {
+            builder.AddMarkupContent(4, $"&nbsp; <small><i>{df.ClrType}</i></small>");
+        }
+    };
+}

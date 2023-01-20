@@ -3,21 +3,24 @@
 @using Parquet.Schema;
 @using ParquetViewer.WebAdapters;
 @using System.Text;
+@using Toolbelt.Blazor.FileDropZone
 
 <PageTitle>Index</PageTitle>
 
 <p>
-    <InputFile OnChange="@LoadFile"/>
+    <FileDropZone class="drop-zone">
+        Choose or drop a parquet file<br/>
+        <InputFile OnChange="@LoadFile"/>
+    </FileDropZone>
 </p>
 
+<p>
+    <ManagedSchema Schema="@schema"/>
+</p>
 
-@if (_schemaHtml != null)
-{
-    <div>
-        <h2 class="h2">Schema</h2>
-        @_schemaHtml
-    </div>
-}
+<p>
+    <ThriftView ThriftMeta="@thrift"/>
+</p>
 
 @if(error != null)
 {
@@ -27,9 +30,9 @@
 }
 
 @code {
-    ParquetSchema? _schema = null;
-    MarkupString? _schemaHtml = null;
+    ParquetSchema? schema = null;
     string? error = null;
+    Parquet.Thrift.FileMetaData? thrift = null;
 
     private async Task LoadFile(InputFileChangeEventArgs e)
     {
@@ -40,74 +43,18 @@
             {
                 using (var reader = await ParquetReader.CreateAsync(bs))
                 {
-                    _schema = reader.Schema;
+                    schema = reader.Schema;
+                    thrift = reader.ThriftMetadata;
                 }
             }
 
-            var sb = new StringBuilder();
-            RenderSchema(_schema.Fields, sb);
-            _schemaHtml = new MarkupString(sb.ToString());
             error = null;
         }
         catch(Exception ex)
         {
             error = ex.ToString();
-            _schemaHtml = null;
+            schema = null;
+            thrift = null;
         }
-    }
-
-    private void RenderSchema(IReadOnlyList<Field> fields, StringBuilder sb)
-    {
-        sb.AppendLine("<table class='table table-sm table-bordered table-striped'>");
-
-        // header
-        sb.AppendLine("<thead><tr>");
-        sb.AppendLine("<th>Name</th>");
-        sb.AppendLine("<th>Path</th>");
-        sb.AppendLine("<th>Schema Type</th>");
-        sb.AppendLine("<th>Data Type</th>");
-        sb.AppendLine("<th>Nullable?</th>");
-        sb.AppendLine("<th>Array?</th>");
-        sb.AppendLine("</tr></thead>");
-
-        // data
-        sb.AppendLine("<tbody>");
-        foreach(Field f in fields)
-        {
-            sb.AppendLine("<tr>");
-            sb.AppendLine($"<td>{f.Name}</td>");
-            sb.AppendLine($"<td>{f.Path}</td>");
-            sb.AppendLine("<td>");
-            sb.AppendLine(f.SchemaType.ToString());
-            if(f is StructField sf)
-            {
-                RenderSchema(sf.Fields, sb);
-            }
-            else if(f is ListField lf)
-            {
-                RenderSchema(new Field[] { lf.Item }, sb);
-            }
-            else if(f is MapField mf)
-            {
-                RenderSchema(new Field[] { mf.Key, mf.Value }, sb);
-            }
-            sb.AppendLine("</td>");
-            if(f is DataField df)
-            {
-                sb.AppendLine($"<td>{df.ClrType}</td>");
-                sb.AppendLine($"<td>{df.IsNullable}</td>");
-                sb.AppendLine($"<td>{df.IsArray}</td>");
-            }
-            else
-            {
-                sb.AppendLine($"<td></td>");
-                sb.AppendLine($"<td></td>");
-                sb.AppendLine($"<td></td>");
-            }
-            sb.AppendLine("</tr>");
-        }
-        sb.AppendLine("</tbody>");
-
-        sb.AppendLine("</table>");
     }
 }
