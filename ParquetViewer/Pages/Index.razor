@@ -6,40 +6,59 @@
 
 <PageTitle>Index</PageTitle>
 
-<InputFile OnChange="@LoadFile"/>
+<p>
+    <InputFile OnChange="@LoadFile"/>
+</p>
 
-@_schemaHtml
+
+@if (_schemaHtml != null)
+{
+    <div>
+        <h2 class="h2">Schema</h2>
+        @_schemaHtml
+    </div>
+}
+
+@if(error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @error
+    </div>
+}
 
 @code {
     ParquetSchema? _schema = null;
     MarkupString? _schemaHtml = null;
+    string? error = null;
 
     private async Task LoadFile(InputFileChangeEventArgs e)
     {
-        IBrowserFile file = e.File;
-        using(var bs = new BlazorFileStream(file, long.MaxValue))
+        try
         {
-            using(var ms = new MemoryStream())
+            IBrowserFile file = e.File;
+            using (var bs = new BlazorFileStream(file, long.MaxValue))
             {
-                await bs.CopyToAsync(ms);
-                ms.Position = 0;
-
-                using (var reader = await ParquetReader.CreateAsync(ms))
+                using (var reader = await ParquetReader.CreateAsync(bs))
                 {
                     _schema = reader.Schema;
                 }
             }
 
+            var sb = new StringBuilder();
+            RenderSchema(_schema.Fields, sb);
+            _schemaHtml = new MarkupString(sb.ToString());
+            error = null;
         }
-
-        var sb = new StringBuilder();
-        RenderSchema(_schema.Fields, sb);
-        _schemaHtml = new MarkupString(sb.ToString());
+        catch(Exception ex)
+        {
+            error = ex.ToString();
+            _schemaHtml = null;
+        }
     }
 
     private void RenderSchema(IReadOnlyList<Field> fields, StringBuilder sb)
     {
-        sb.AppendLine("<table class='table'>");
+        sb.AppendLine("<table class='table table-sm table-bordered table-striped'>");
 
         // header
         sb.AppendLine("<thead><tr>");
