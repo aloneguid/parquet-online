@@ -1,9 +1,96 @@
 ﻿@page "/"
+@using Parquet;
+@using Parquet.Schema;
+@using ParquetViewer.WebAdapters;
+@using System.Text;
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<InputFile OnChange="@LoadFile"/>
 
-Welcome to your new app.
+@_schemaHtml
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+    ParquetSchema? _schema = null;
+    MarkupString? _schemaHtml = null;
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+        using(var bs = new BlazorFileStream(file, long.MaxValue))
+        {
+            using(var ms = new MemoryStream())
+            {
+                await bs.CopyToAsync(ms);
+                ms.Position = 0;
+
+                using (var reader = await ParquetReader.CreateAsync(ms))
+                {
+                    _schema = reader.Schema;
+                }
+            }
+
+        }
+
+        var sb = new StringBuilder();
+        RenderSchema(_schema.Fields, sb);
+        _schemaHtml = new MarkupString(sb.ToString());
+    }
+
+    private void RenderSchema(IReadOnlyList<Field> fields, StringBuilder sb)
+    {
+        sb.AppendLine("<table class='table'>");
+
+        // header
+        sb.AppendLine("<thead><tr>");
+        sb.AppendLine("<th>Name</th>");
+        sb.AppendLine("<th>Path</th>");
+        sb.AppendLine("<th>Schema Type</th>");
+        sb.AppendLine("<th>Data Type</th>");
+        sb.AppendLine("<th>Nullable?</th>");
+        sb.AppendLine("<th>Array?</th>");
+        sb.AppendLine("</tr></thead>");
+
+        // data
+        sb.AppendLine("<tbody>");
+        foreach(Field f in fields)
+        {
+            sb.AppendLine("<tr>");
+            sb.AppendLine($"<td>{f.Name}</td>");
+            sb.AppendLine($"<td>{f.Path}</td>");
+            sb.AppendLine("<td>");
+            sb.AppendLine(f.SchemaType.ToString());
+            if(f is StructField sf)
+            {
+                RenderSchema(sf.Fields, sb);
+            }
+            else if(f is ListField lf)
+            {
+                RenderSchema(new Field[] { lf.Item }, sb);
+            }
+            else if(f is MapField mf)
+            {
+                RenderSchema(new Field[] { mf.Key, mf.Value }, sb);
+            }
+            sb.AppendLine("</td>");
+            if(f is DataField df)
+            {
+                sb.AppendLine($"<td>{df.ClrType}</td>");
+                sb.AppendLine($"<td>{df.IsNullable}</td>");
+                sb.AppendLine($"<td>{df.IsArray}</td>");
+            }
+            else
+            {
+                sb.AppendLine($"<td></td>");
+                sb.AppendLine($"<td></td>");
+                sb.AppendLine($"<td></td>");
+            }
+            sb.AppendLine("</tr>");
+        }
+        sb.AppendLine("</tbody>");
+
+        sb.AppendLine("</table>");
+    }
+}
