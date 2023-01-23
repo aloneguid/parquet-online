@@ -9,12 +9,12 @@
 
 @if (schema == null)
 {
-    <p>
-        <FileDropZone class="drop-zone">
-            Choose or drop a parquet file<br/>
-            <InputFile OnChange="@LoadFile"/>
-        </FileDropZone>
-    </p>
+<p>
+    <FileDropZone class="drop-zone">
+        Choose or drop a parquet file<br/>
+        <InputFile OnChange="@LoadFile"/>
+    </FileDropZone>
+</p>
 }
 
 <p>
@@ -23,6 +23,10 @@
 
 <p>
     <ThriftView ThriftMeta="@thrift"/>
+</p>
+
+<p>
+    <DataView/>
 </p>
 
 @if(error != null)
@@ -37,8 +41,7 @@
     string? error = null;
     Parquet.Thrift.FileMetaData? thrift = null;
 
-    private async Task LoadFile(InputFileChangeEventArgs e)
-    {
+    async Task LoadFile(InputFileChangeEventArgs e) {
         try
         {
             IBrowserFile file = e.File;

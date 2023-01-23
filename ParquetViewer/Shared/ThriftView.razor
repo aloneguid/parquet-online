@@ -32,20 +32,20 @@
     [Parameter]
     public Parquet.Thrift.FileMetaData? ThriftMeta { get; set; }
 
-    object selection;
-    string longValue;
+    object? selection;
+    string? longValue;
 
     void OnChange()
     {
-        if (!(selection is KeyValuePair<string, object> kvp) || !IsValue(kvp.Value)) return;
+        if (!(selection is KeyValuePair<string, object?> kvp) || !IsValue(kvp.Value)) return;
 
         longValue = kvp.Value?.ToString() ?? "";
     }
 
-    Dictionary<string, object> Propertise(object o)
+    Dictionary<string, object?>? Propertise(object? o)
     {
         if (o == null) return null;
-        var result = new Dictionary<string, object>();
+        var result = new Dictionary<string, object?>();
 
         foreach(PropertyInfo pi in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public))
         {
@@ -64,9 +64,9 @@
 
     void LoadFields(TreeExpandEventArgs args)
     {
-        if (!(args.Value is KeyValuePair<string, object> kvp)) return;
+        if (!(args.Value is KeyValuePair<string, object?> kvp)) return;
 
-        var children = new Dictionary<string, object>();
+        var children = new Dictionary<string, object?>();
 
         if (IsList(kvp.Value))
         {
@@ -96,7 +96,7 @@
 
     RenderFragment<RadzenTreeItem> FieldTemplate = (context) => builder =>
     {
-        if (!(context.Value is KeyValuePair<string, object> kvp)) return;
+        if (!(context.Value is KeyValuePair<string, object?> kvp)) return;
 
         string icon = "tag";
         object v = kvp.Value;

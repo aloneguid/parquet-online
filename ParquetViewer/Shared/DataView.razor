@@ -1,0 +1,21 @@
+﻿@using Parquet.Schema;
+@using System.Reflection;
+@using System.Collections;
+
+<!-- https://blazor.radzen.com/datagrid-dynamic -->
+@if (Table != null)
+{
+    <RadzenCard>
+        <RadzenDataGrid>
+
+        </RadzenDataGrid>
+    </RadzenCard>
+}
+
+@code {
+
+    [Parameter]
+    public Parquet.Rows.Table? Table { get; set; }
+
+
+}

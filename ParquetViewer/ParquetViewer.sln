@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParquetViewer", "ParquetVie
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C93F15A9-B724-41B9-BB06-325E32190455}"
 	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
 		..\.github\workflows\azure-static-web-apps-kind-rock-042108e03.yml = ..\.github\workflows\azure-static-web-apps-kind-rock-042108e03.yml
 		..\README.md = ..\README.md
 	EndProjectSection
