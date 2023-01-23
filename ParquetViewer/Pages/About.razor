@@ -3,9 +3,18 @@
 <PageTitle>About</PageTitle>
 
 <p>
-<a href="https://github.com/aloneguid/parquet-online" target="_blank">GitHub Repo</a>
+    <ul>
+        <li>
+            <RadzenLink Path="@libLink" Target="_blank">
+                Usint Parquet.Net @Parquet.Globals.Version
+            </RadzenLink>
+        </li>
+        <li>
+            <RadzenLink Path="https://github.com/aloneguid/parquet-online" Target="_blank">GitHub Repo</RadzenLink>
+        </li>
+    </ul>
 </p>
 
-<p>
-todo
-</p>
+@code {
+    string libLink = $"https://github.com/aloneguid/parquet-dotnet/releases/tag/{Parquet.Globals.Version}";
+}

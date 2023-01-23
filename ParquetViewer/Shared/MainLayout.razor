@@ -1,21 +1,26 @@
 ﻿@inherits LayoutComponentBase
 @using Parquet;
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            Built with
-            <strong>
-                <a href="https://github.com/aloneguid/parquet-dotnet/releases/tag/@Parquet.Globals.Version" target="_blank">Parquet.Net @Parquet.Globals.Version</a>
-            </strong>
+<RadzenLayout class="rz-shadow-3">
+    <RadzenHeader>
+        <div class="d-flex align-items-center">
+            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+            <RadzenLabel Text="Parquet Online" />
         </div>
-
-        <article class="content px-4">
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Style="width: 200px">
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" />
+            <RadzenPanelMenuItem Text="About" Icon="account_box" Path="/about" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+    <RadzenBody>
+        <div class="p-2">
             @Body
-        </article>
-    </main>
-</div>
+        </div>
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+    bool sidebarExpanded = false;
+}

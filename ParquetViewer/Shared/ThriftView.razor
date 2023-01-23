@@ -1,67 +1,29 @@
 ﻿@using Parquet.Schema;
+@using System.Reflection;
+@using System.Collections;
 
 @if(ThriftMeta != null)
 {
     <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H3">Raw Thrift Metadata</RadzenText>
+        <RadzenAccordion>
+            <Items>
+                <RadzenAccordionItem Text="Raw Thrift Schema" Icon="account_balance_wallet">
+                    <RadzenSplitter>
+                        <RadzenSplitterPane>
+                            <RadzenTree Data="@Propertise(ThriftMeta)" Expand=@LoadFields @bind-Value=@selection Change=@OnChange Style="width: 100%;">
+                                <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate />
+                            </RadzenTree>
+                        </RadzenSplitterPane>
+                        <RadzenSplitterPane>
+                            <RadzenTextArea Class="w-100" @bind-Value=@longValue Rows="10"/>
+                        </RadzenSplitterPane>
+                    </RadzenSplitter>
 
-        <RadzenCard>
-            @foreach(var rme in GetRootMeta())
-            {
-                <RadzenText TextStyle="TextStyle.Body1">
-                    @rme.Key: <strong>@rme.Value</strong>
-                </RadzenText>
-            }
 
-            @if(ThriftMeta.Key_value_metadata != null && ThriftMeta.Key_value_metadata.Count > 0)
-            {
-                <p>
-                    <RadzenCard>
-                        @foreach(var kve in ThriftMeta.Key_value_metadata)
-                        {
-                            <RadzenText TextStyle="TextStyle.Body2">
-                                @kve.Key: <strong>@kve.Value</strong>
-                            </RadzenText>
-                        }
-                    </RadzenCard>
-                </p>
-            }
+                </RadzenAccordionItem>
 
-            @foreach(var rg in ThriftMeta.Row_groups)
-            {
-
-                <p>
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.DisplayH4">Row Group</RadzenText>
-                        
-                        @foreach(var rme in GetRgMeta(rg))
-                        {
-                            <RadzenText TextStyle="TextStyle.Body2">
-                                @rme.Key: <strong>@rme.Value</strong>
-                            </RadzenText>
-                        }
-
-                        <RadzenCard>todo: sorting columns</RadzenCard>
-
-                        <RadzenCard>
-                            <RadzenText TextStyle="TextStyle.DisplayH5">Columns</RadzenText>
-                            @foreach(var cc in rg.Columns)
-                            {
-                                <RadzenCard>
-                                    @foreach (var rme in GetColumnMeta(cc))
-                                    {
-                                        <RadzenText TextStyle="TextStyle.Body2">
-                                            @rme.Key: <strong>@rme.Value</strong>
-                                        </RadzenText>
-                                    }
-                                </RadzenCard>
-                            }
-                        </RadzenCard>
-                    </RadzenCard>
-                </p>
-            }
-        </RadzenCard>
-
+            </Items>
+        </RadzenAccordion>
     </RadzenCard>
 }
 
@@ -70,51 +32,113 @@
     [Parameter]
     public Parquet.Thrift.FileMetaData? ThriftMeta { get; set; }
 
-    int rgi = 0;
+    object selection;
+    string longValue;
 
-    Dictionary<string, string> GetRootMeta()
+    void OnChange()
     {
-        return new Dictionary<string, string>
-        {
-            { "Version", ThriftMeta.Version.ToString() },
-            { "Created With", ThriftMeta.Created_by },
-            { "Total Rows", ThriftMeta.Num_rows.ToString() },
-            { "Encryption", ThriftMeta.Encryption_algorithm == null ? "no" : "yes" },
-            { "Row Group Count", ThriftMeta.Row_groups.Count.ToString() }
-        };
+        if (!(selection is KeyValuePair<string, object> kvp) || !IsValue(kvp.Value)) return;
+
+        longValue = kvp.Value?.ToString() ?? "";
     }
 
-    Dictionary<string, string> GetRgMeta(Parquet.Thrift.RowGroup rg)
+    Dictionary<string, object> Propertise(object o)
     {
-        return new Dictionary<string, string>
+        if (o == null) return null;
+        var result = new Dictionary<string, object>();
+
+        foreach(PropertyInfo pi in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public))
         {
-            { "Ordinal", rg.Ordinal.ToString() },
-            { "File Offset", rg.File_offset.ToString() },
-            { "Row Count", rg.Num_rows.ToString() },
-            { "Size in Bytes", rg.Total_byte_size.ToString() },
-            { "Compressed Size", rg.Total_compressed_size.ToString() }
-        };
+            try
+            {
+                result[pi.Name] = pi.GetValue(o);
+            }
+            catch(Exception ex)
+            {
+                result[pi.Name] = "cannot get value: " + ex;
+            }
+        }
+
+        return result;
     }
 
-    Dictionary<string, string> GetColumnMeta(Parquet.Thrift.ColumnChunk cc)
+    void LoadFields(TreeExpandEventArgs args)
     {
-        return new Dictionary<string, string>
+        if (!(args.Value is KeyValuePair<string, object> kvp)) return;
+
+        var children = new Dictionary<string, object>();
+
+        if (IsList(kvp.Value))
         {
-            { "File Path", cc.File_path ?? "" },
-            { "Index Offset", cc.Column_index_offset.ToString() },
-            { "Index Length", cc.Column_index_length.ToString() },
-            { "File Offset", cc.File_offset.ToString() },
-            { "Codec", cc.Meta_data.Codec.ToString() },
-            { "Data Page Offset", cc.Meta_data.Data_page_offset.ToString() },
-            { "Dictionary Page Offset", cc.Meta_data.Dictionary_page_offset.ToString() },
-            { "Index Page Offset", cc.Meta_data.Index_page_offset.ToString() },
-            { "Number of Values", cc.Meta_data.Num_values.ToString() },
-            { "Path in Schema", cc.Meta_data.Path_in_schema == null ? "" : string.Join(".", cc.Meta_data.Path_in_schema) },
-            { "Compressed Size", cc.Meta_data.Total_uncompressed_size.ToString() },
-            { "Uncompressed Size", cc.Meta_data.Total_compressed_size.ToString() },
-            { "Type", cc.Meta_data.Type.ToString() },
-            { "Encodings", cc.Meta_data.Encodings == null ? "" : string.Join(", ", cc.Meta_data.Encodings) },
-        };
+            int i = 0;
+            foreach (object li in (IEnumerable)kvp.Value)
+            {
+                children[$"{++i}"] = li;
+            }
+        }
+        else if(!IsValue(kvp.Value))
+        {
+            children = Propertise(kvp.Value);
+        }
+
+
+        args.Children.Text = GetTextForField;
+        args.Children.HasChildren = (kkk) => children.Count > 0;
+        args.Children.Template = FieldTemplate;
+        args.Children.Data = children;
     }
 
+    string GetTextForField(object data)
+    {
+        if (data is KeyValuePair<string, object> kvp) return kvp.Key;
+        return "?";
+    }
+
+    RenderFragment<RadzenTreeItem> FieldTemplate = (context) => builder =>
+    {
+        if (!(context.Value is KeyValuePair<string, object> kvp)) return;
+
+        string icon = "tag";
+        object v = kvp.Value;
+
+        if(IsValue(v))
+        {
+            icon = "fiber_manual_record";
+        }
+        else if(IsList(v))
+        {
+            icon = "list";
+        }
+
+        builder.OpenComponent<RadzenIcon>(0);
+        builder.AddAttribute(1, nameof(RadzenIcon.Icon), icon);
+        builder.CloseComponent();
+        builder.AddContent(3, context.Text);
+
+        if(IsValue(v))
+        {
+            string sv = v?.ToString() ?? "";
+            if (sv.Length > 10)
+                sv = sv.Substring(0, 10) + "...";
+            builder.AddMarkupContent(4, $":&nbsp; <strong>{sv}</strong>");
+        }
+        else if(IsList(v))
+        {
+            builder.AddMarkupContent(4, $"&nbsp; (<i>list</i>)");
+        }
+    };
+
+    static bool IsValue(object v)
+    {
+        if (v == null) return true;
+        Type t = v.GetType();
+        return t == typeof(string) || t == typeof(int) || t == typeof(long) || t == typeof(byte[]) || t.IsEnum;
+    }
+
+    static bool IsList(object v)
+    {
+        if (v == null || !v.GetType().IsGenericType) return false;
+
+        return v.GetType().GetGenericTypeDefinition() == typeof(List<>);
+    }
 }

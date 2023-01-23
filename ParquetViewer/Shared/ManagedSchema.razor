@@ -3,12 +3,17 @@
 @if(Schema != null)
 {
     <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H3">Schema</RadzenText>
-        <RadzenText>as Parquet.Net sees it after parsing out from raw schema</RadzenText>
-        <RadzenTree Data=@Schema.Fields Expand=@LoadFields Style="width: 50%; height: 300px">
-            <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate/>
-        </RadzenTree>
+        <RadzenAccordion>
+            <Items>
+                <RadzenAccordionItem Text="Managed Schema" Icon="account_balance_wallet">
+                    <RadzenTree Data=@Schema.Fields Expand=@LoadFields Style="width: 50%;">
+                        <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate Expanded=@ShouldExpand />
+                    </RadzenTree>
+                </RadzenAccordionItem>
+            </Items>
+        </RadzenAccordion>
     </RadzenCard>
+
 }
 
 @code {
@@ -74,4 +79,9 @@
             builder.AddMarkupContent(4, $"&nbsp; <small><i>{df.ClrType}</i></small>");
         }
     };
+
+    bool ShouldExpand(object data)
+    {
+        return true;
+    }
 }
