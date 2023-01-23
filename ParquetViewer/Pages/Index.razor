@@ -7,12 +7,15 @@
 
 <PageTitle>Index</PageTitle>
 
-<p>
-    <FileDropZone class="drop-zone">
-        Choose or drop a parquet file<br/>
-        <InputFile OnChange="@LoadFile"/>
-    </FileDropZone>
-</p>
+@if (schema == null)
+{
+    <p>
+        <FileDropZone class="drop-zone">
+            Choose or drop a parquet file<br/>
+            <InputFile OnChange="@LoadFile"/>
+        </FileDropZone>
+    </p>
+}
 
 <p>
     <ManagedSchema Schema="@schema"/>
