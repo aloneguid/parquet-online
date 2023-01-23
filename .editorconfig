@@ -127,6 +127,9 @@ dotnet_separate_import_directive_groups = false
 
 # Newline settings (see https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/csharp-formatting-options)
 csharp_new_line_before_open_brace = none
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
 
 # Identation options
 csharp_indent_case_contents = true
