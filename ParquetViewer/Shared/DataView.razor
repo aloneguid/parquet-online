@@ -1,4 +1,5 @@
-﻿@using Parquet.Schema;
+﻿@using Parquet.Rows;
+@using Parquet.Schema;
 @using System.Reflection;
 @using System.Collections;
 
@@ -6,8 +7,19 @@
 @if (Table != null)
 {
     <RadzenCard>
-        <RadzenDataGrid>
-
+        <RadzenDataGrid TItem="Row" Data=@Table AllowColumnReorder="true" AllowColumnResize="true" Density="Density.Compact">
+            <Columns>
+                @for(int i = 0; i < Table.Schema.Fields.Count; i++)
+                {
+                    Field f = Table.Schema.Fields[i];
+                    int fi = i;
+                    <RadzenDataGridColumn TItem="Row" Title="@f.Name">
+                        <Template>
+                            <RowValue Field=@f Row=@context ValueIndex=@fi/>
+                        </Template>
+                    </RadzenDataGridColumn>
+                }
+            </Columns>
         </RadzenDataGrid>
     </RadzenCard>
 }
@@ -17,5 +29,32 @@
     [Parameter]
     public Parquet.Rows.Table? Table { get; set; }
 
+    public string DisplayValue(Field f, Row row, int fi)
+    {
+        if(f.SchemaType == SchemaType.Data && f is DataField df)
+        {
+            object value = row[fi];
+            if(df.IsArray)
+            {
+                var lst = new List<string>();
+                foreach(object iv in (IEnumerable)value)
+                {
+                    lst.Add(iv?.ToString() ?? "<null>");
+                }
 
+                return string.Join(";", lst);
+            }
+            return value?.ToString() ?? "<null>";
+        }
+        else if(f.SchemaType == SchemaType.List && f is ListField lf)
+        {
+            object value = row[fi];
+
+            return lf.Item.ToString();
+        }
+        else
+        {
+            return f.SchemaType.ToString();
+        }
+    }
 }

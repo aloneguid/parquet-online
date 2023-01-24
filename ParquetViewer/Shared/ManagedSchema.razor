@@ -2,18 +2,9 @@
 
 @if(Schema != null)
 {
-    <RadzenCard>
-        <RadzenAccordion>
-            <Items>
-                <RadzenAccordionItem Text="Managed Schema" Icon="account_balance_wallet">
-                    <RadzenTree Data=@Schema.Fields Expand=@LoadFields Style="width: 50%;">
-                        <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate Expanded=@ShouldExpand />
-                    </RadzenTree>
-                </RadzenAccordionItem>
-            </Items>
-        </RadzenAccordion>
-    </RadzenCard>
-
+<RadzenTree Data=@Schema.Fields Expand=@LoadFields Style="width: 50%;">
+    <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate Expanded=@ShouldExpand />
+</RadzenTree>
 }
 
 @code {
@@ -25,27 +16,31 @@
     {
         if (!(args.Value is Field f)) return;
 
-        args.Children.Text = GetTextForField;
-        args.Children.HasChildren = (field) => ((Field)field).SchemaType != SchemaType.Data;
-        args.Children.Template = FieldTemplate;
+        bool hasChildren = f.SchemaType != SchemaType.Data;
+        if (hasChildren)
+        {
 
-        if(f is StructField sf)
-        {
-            args.Children.Data = sf.Fields;
-        }
-        else if(f is ListField lf)
-        {
-            args.Children.Data = new Field[] { lf.Item };
-        }
-        else if(f is MapField mf)
-        {
-            args.Children.Data = new Field[] { mf.Key, mf.Value };
+            args.Children.Text = GetTextForField;
+            args.Children.Template = FieldTemplate;
+
+            if (f is StructField sf)
+            {
+                args.Children.Data = sf.Fields;
+            }
+            else if (f is ListField lf)
+            {
+                args.Children.Data = new Field[] { lf.Item };
+            }
+            else if (f is MapField mf)
+            {
+                args.Children.Data = new Field[] { mf.Key, mf.Value };
+            }
+            args.Children.HasChildren = _ => true;
         }
         else
         {
-            args.Children.Data = new Field[0];
+            args.Children.HasChildren = _ => false;
         }
-
     }
 
     string GetTextForField(object data)

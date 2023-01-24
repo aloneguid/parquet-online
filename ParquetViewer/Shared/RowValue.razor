@@ -1,0 +1,61 @@
+﻿@using Parquet.Rows;
+@using Parquet.Schema;
+
+@if(Field != null)
+{
+    if(Field.SchemaType == SchemaType.Data)
+    {
+        if(Field is DataField df)
+        {
+            if(df.IsArray)
+            {
+                <strong>todo: arrays</strong>
+            }
+            else
+            {
+                object? v = Row?[ValueIndex]?.ToString();
+                if(v == null)
+                {
+                    <i>null</i>
+                }
+                else
+                {
+                    @v
+                }
+            }
+        }
+    }
+    else if(Field.SchemaType == SchemaType.Struct)
+    {
+        if(Field is StructField sf)
+        {
+            Row structRow = (Row)Row[ValueIndex];
+            string jsonString = structRow.ToString("j");
+
+            @jsonString
+
+            /*for(int i = 0; i < sf.Fields.Count; i++)
+            {
+                int fii = i;
+                Field f = sf.Fields[i];
+                <strong>@(f.Name):</strong>
+                <RowValue Row=@structRow ValueIndex=@fii Field=@f/><br/>
+            }*/
+        }
+    }
+    else
+    {
+        <strong>@Field.SchemaType</strong>
+    }
+}
+
+@code {
+    [Parameter]
+    public Row? Row { get; set; }
+
+    [Parameter]
+    public int ValueIndex { get; set; }
+
+    [Parameter]
+    public Field? Field { get; set; }
+}

@@ -4,27 +4,16 @@
 
 @if(ThriftMeta != null)
 {
-    <RadzenCard>
-        <RadzenAccordion>
-            <Items>
-                <RadzenAccordionItem Text="Raw Thrift Schema" Icon="account_balance_wallet">
-                    <RadzenSplitter>
-                        <RadzenSplitterPane>
-                            <RadzenTree Data="@Propertise(ThriftMeta)" Expand=@LoadFields @bind-Value=@selection Change=@OnChange Style="width: 100%;">
-                                <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate />
-                            </RadzenTree>
-                        </RadzenSplitterPane>
-                        <RadzenSplitterPane>
-                            <RadzenTextArea Class="w-100" @bind-Value=@longValue Rows="10"/>
-                        </RadzenSplitterPane>
-                    </RadzenSplitter>
-
-
-                </RadzenAccordionItem>
-
-            </Items>
-        </RadzenAccordion>
-    </RadzenCard>
+<RadzenSplitter>
+    <RadzenSplitterPane>
+        <RadzenTree Data="@Propertise(ThriftMeta)" Expand=@LoadFields @bind-Value=@selection Change=@OnChange Style="width: 100%;">
+            <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate />
+        </RadzenTree>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane>
+        <RadzenTextArea Class="w-100" @bind-Value=@longValue Rows="10"/>
+    </RadzenSplitterPane>
+</RadzenSplitter>
 }
 
 @code {

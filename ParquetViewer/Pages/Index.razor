@@ -1,33 +1,52 @@
 ﻿@page "/"
+@using Humanizer;
 @using Parquet;
+@using Parquet.Rows;
 @using Parquet.Schema;
 @using ParquetViewer.WebAdapters;
 @using System.Text;
 @using Toolbelt.Blazor.FileDropZone
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Viewer</PageTitle>
 
-@if (schema == null)
+@if(isLoading)
+{
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.Subtitle2">@loadStatus</RadzenText>
+        <RadzenProgressBar Max="3" @bind-Value=@loadValue/>
+    </RadzenCard>
+}
+
+@if (table == null)
 {
 <p>
     <FileDropZone class="drop-zone">
-        Choose or drop a parquet file<br/>
-        <InputFile OnChange="@LoadFile"/>
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Choose or drag a .parquet file</RadzenText>
+            <InputFile OnChange="@LoadFile"/>
+        </RadzenCard>
     </FileDropZone>
 </p>
 }
+else
+{
+    if(file != null)
+    {
+        
+ <p>
+    <RadzenText TextStyle="TextStyle.DisplayH6" Style="display: inline;">@file.Name</RadzenText>
+    @file.Size.Bytes()
+</p>
+    }
 
 <p>
-    <ManagedSchema Schema="@schema"/>
+    <DataView Table="@table"/>
 </p>
 
 <p>
-    <ThriftView ThriftMeta="@thrift"/>
+    <RadzenButton Text="clear" Click=@Clear ButtonStyle="ButtonStyle.Secondary"/>
 </p>
-
-<p>
-    <DataView/>
-</p>
+}
 
 @if(error != null)
 {
@@ -37,20 +56,42 @@
 }
 
 @code {
-    ParquetSchema? schema = null;
     string? error = null;
-    Parquet.Thrift.FileMetaData? thrift = null;
+    Table? table = null;
+    bool isLoading = false;
+    string? loadStatus = null;
+    double loadValue = 0;
+    IBrowserFile? file = null;
+
+    void Clear(MouseEventArgs args)
+    {
+        file = null;
+        table = null;
+    }
 
     async Task LoadFile(InputFileChangeEventArgs e) {
+        isLoading = true;
+        loadValue = 0;
+        loadStatus = "opening file";
+        StateHasChanged();
         try
         {
-            IBrowserFile file = e.File;
+            file = e.File;
             using (var bs = new BlazorFileStream(file, long.MaxValue))
             {
+                loadValue = 1;
+                loadStatus = "creating Parquet reader";
+                StateHasChanged();
                 using (var reader = await ParquetReader.CreateAsync(bs))
                 {
-                    schema = reader.Schema;
-                    thrift = reader.ThriftMetadata;
+                    loadValue = 2;
+                    loadStatus = "reading data";
+                    StateHasChanged();
+                    var tmpTable = await reader.ReadAsTableAsync();
+                    loadValue = 3;
+                    loadStatus = "rendering";
+                    table = tmpTable;
+                    StateHasChanged();
                 }
             }
 
@@ -58,9 +99,13 @@
         }
         catch(Exception ex)
         {
+            table = null;
+            file = null;
             error = ex.ToString();
-            schema = null;
-            thrift = null;
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 }
