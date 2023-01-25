@@ -13,7 +13,7 @@
 {
     <RadzenCard>
         <RadzenText TextStyle="TextStyle.Subtitle2">@loadStatus</RadzenText>
-        <RadzenProgressBar Max="3" @bind-Value=@loadValue/>
+        <RadzenProgressBar Max="100" @bind-Value=@loadValue/>
     </RadzenCard>
 }
 
@@ -71,25 +71,19 @@ else
 
     async Task LoadFile(InputFileChangeEventArgs e) {
         isLoading = true;
-        loadValue = 0;
-        loadStatus = "opening file";
-        StateHasChanged();
         try
         {
             file = e.File;
             using (var bs = new BlazorFileStream(file, long.MaxValue))
             {
-                loadValue = 1;
-                loadStatus = "creating Parquet reader";
-                StateHasChanged();
-                using (var reader = await ParquetReader.CreateAsync(bs))
+                using (var reader = await ParquetReader.CreateAsync(bs, new ParquetOptions {TreatByteArrayAsString = true}))
                 {
-                    loadValue = 2;
-                    loadStatus = "reading data";
-                    StateHasChanged();
-                    var tmpTable = await reader.ReadAsTableAsync();
-                    loadValue = 3;
-                    loadStatus = "rendering";
+                    var tmpTable = await reader.ReadAsTableAsync(async (int perc, string message) =>
+                    {
+                        loadValue = perc;
+                        loadStatus = message;
+                        StateHasChanged();
+                    });
                     table = tmpTable;
                     StateHasChanged();
                 }

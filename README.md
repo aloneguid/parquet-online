@@ -5,12 +5,20 @@ Parquet Viewer works completely in browser as Web Assembly application.
 
 Hosted at https://parquetdbg.aloneguid.uk/.
 
+Screenshot:
+
+![](docs/banner.png)
+
 ## Features
 
 - View Schema as Parquet.Net sees it.
 
-## Roadmap
-
 - Display raw thrift schema
 - Display parquet internal structure
 - View parquet data
+
+## Roadmap
+
+- View complex types (lists, maps, structs) - some are already supported
+- View large files
+- Specify options before opening files
