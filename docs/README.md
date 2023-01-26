@@ -7,7 +7,7 @@ Hosted at https://parquetdbg.aloneguid.uk/.
 
 Screenshot:
 
-![](docs/banner.png)
+![](banner.png)
 
 ## Features
 

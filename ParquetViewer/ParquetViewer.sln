@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
 		..\.github\workflows\azure-static-web-apps-kind-rock-042108e03.yml = ..\.github\workflows\azure-static-web-apps-kind-rock-042108e03.yml
-		..\README.md = ..\README.md
+		..\docs\README.md = ..\docs\README.md
 	EndProjectSection
 EndProject
 Global

@@ -2,10 +2,18 @@
 @using Parquet;
 
 <RadzenLayout class="rz-shadow-3">
+    <!-- see https://github.com/radzenhq/radzen-blazor/blob/master/RadzenBlazorDemos/Shared/MainLayout.razor -->
     <RadzenHeader>
-        <div class="d-flex align-items-center">
-            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-            <RadzenLabel Text="Parquet Online" />
+        <div class="row justify-content-start align-items-center">
+            <div class="col-5 d-flex align-items-center">
+                <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+                <RadzenImage Path="icon-192.png" width="30"/>&nbsp;
+                <RadzenLabel Text="Parquet Viewer" Style="overflow:hidden; white-space: nowrap; text-overflow: ellipsis;" />
+            </div>
+            <div class="col-7 d-flex align-items-center justify-content-end">
+                <iframe src="https://ghbtns.com/github-btn.html?user=aloneguid&repo=parquet-online&type=star&count=true&size=large" frameborder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
+            </div>
+
         </div>
     </RadzenHeader>
     <RadzenSidebar @bind-Expanded="@sidebarExpanded" Style="width: 200px">
