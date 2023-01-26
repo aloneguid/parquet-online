@@ -1,0 +1,63 @@
+﻿@using KristofferStrube.Blazor.FileSystem;
+@using KristofferStrube.Blazor.FileSystemAccess;
+@using Parquet;
+@using ParquetViewer.WebAdapters;
+@inject IFileSystemAccessService FileSystemAccessService;
+
+<RadzenButton Text="Open .parquet file" Click=@OpenParquetFile/>
+
+@if (error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @error
+    </div>
+}
+
+@code {
+
+    string? error = null;
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnFileOpened { get; set; }
+
+    public async Task OpenParquetFile(MouseEventArgs args)
+    {
+        FileSystemFileHandle? fileHandle = null;
+        error = null;
+        try
+        {
+            var options = new OpenFilePickerOptionsStartInWellKnownDirectory
+            {
+                Types = new FilePickerAcceptType[]
+                {
+                    new FilePickerAcceptType
+                    {
+                        Description = "Apache Parquet Files",
+                        Accept = new()
+                        {
+                            { "parquet/*", new string[] { ".parquet" } }
+                        }
+                    },
+                },
+                Multiple = false,
+                StartIn = WellKnownDirectory.Downloads
+            };
+            FileSystemFileHandle[]? fileHandles = await FileSystemAccessService.ShowOpenFilePickerAsync(options);
+            fileHandle = fileHandles.Single();
+        }
+        catch(JSException ex)
+        {
+            error = ex.ToString();
+        }
+        finally
+        {
+            if(fileHandle != null)
+            {
+                KristofferStrube.Blazor.FileAPI.File file = await fileHandle.GetFileAsync();
+                await GFile.InitFile(file);
+                StateHasChanged();
+                await OnFileOpened.InvokeAsync(null);
+            }
+        }
+    }
+}

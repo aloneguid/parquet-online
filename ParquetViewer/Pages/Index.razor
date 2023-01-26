@@ -17,36 +17,31 @@
     </RadzenCard>
 }
 
-@if (table == null)
+@if(GFile.HasFile)
 {
-<p>
-    <FileDropZone class="drop-zone">
-        <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Choose or drag a .parquet file</RadzenText>
-            <InputFile OnChange="@LoadFile"/>
-        </RadzenCard>
-    </FileDropZone>
+ <p>
+    <RadzenText TextStyle="TextStyle.DisplayH6" Style="display: inline;">@GFile.FileName</RadzenText>
+    @GFile.FileSize.Value.Bytes()
 </p>
 }
-else
-{
-    if(file != null)
-    {
-        
- <p>
-    <RadzenText TextStyle="TextStyle.DisplayH6" Style="display: inline;">@file.Name</RadzenText>
-    @file.Size.Bytes()
+
+<p>
+    <DataView Table="@GFile.Table"/>
 </p>
+
+<p>
+    @if(!GFile.HasFile)
+    {
+        <RadzenCard>
+            <RadzenText>This application opens .parquet files for viewing and works completely on client side. Click the button below to navigate and open a file.</RadzenText>
+        </RadzenCard>
+        <br />
     }
 
-<p>
-    <DataView Table="@table"/>
+    <RadzenCard>
+        <FileOpener OnFileOpened=@OnFileOpened />
+    </RadzenCard>
 </p>
-
-<p>
-    <RadzenButton Text="clear" Click=@Clear ButtonStyle="ButtonStyle.Secondary"/>
-</p>
-}
 
 @if(error != null)
 {
@@ -57,44 +52,44 @@ else
 
 @code {
     string? error = null;
-    Table? table = null;
+
     bool isLoading = false;
     string? loadStatus = null;
     double loadValue = 0;
-    IBrowserFile? file = null;
 
-    void Clear(MouseEventArgs args)
+    async Task OnFileOpened(MouseEventArgs args)
     {
-        file = null;
-        table = null;
-    }
+        //await GFile.Clear();
+        //StateHasChanged();
+        Console.WriteLine("opened event");
 
-    async Task LoadFile(InputFileChangeEventArgs e) {
         isLoading = true;
+        loadValue = 0;
+        loadStatus = "checking file...";
         try
         {
-            file = e.File;
-            using (var bs = new BlazorFileStream(file, long.MaxValue))
+            error = null;
+
+            using (var reader = await ParquetReader.CreateAsync(GFile.RandomAccessStream!, new ParquetOptions {TreatByteArrayAsString = true}))
             {
-                using (var reader = await ParquetReader.CreateAsync(bs, new ParquetOptions {TreatByteArrayAsString = true}))
+                loadStatus = "loading schema...";
+                GFile.ManagedSchema = reader.Schema;
+                GFile.ThriftMetadata = reader.ThriftMetadata;
+
+                var tmpTable = await reader.ReadAsTableAsync(async (int perc, string message) =>
                 {
-                    var tmpTable = await reader.ReadAsTableAsync(async (int perc, string message) =>
-                    {
-                        loadValue = perc;
-                        loadStatus = message;
-                        StateHasChanged();
-                    });
-                    table = tmpTable;
+                    loadValue = perc;
+                    loadStatus = message;
                     StateHasChanged();
-                }
+                });
+                GFile.Table = tmpTable;
+                loadStatus = "rendering...";
+                StateHasChanged();
             }
 
-            error = null;
         }
         catch(Exception ex)
         {
-            table = null;
-            file = null;
             error = ex.ToString();
         }
         finally

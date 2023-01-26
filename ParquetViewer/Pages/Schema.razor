@@ -8,13 +8,12 @@
 
 <PageTitle>Schema Explorer</PageTitle>
 
-@if (schema == null)
+@if (!GFile.HasFile)
 {
 <p>
-    <FileDropZone class="drop-zone">
-        Choose or drop a parquet file to view schema<br/>
-        <InputFile OnChange="@LoadFile"/>
-    </FileDropZone>
+    <div class="alert alert-info" role="alert">
+        no file is open
+    </div>
 </p>
 }
 else
@@ -24,50 +23,14 @@ else
         <RadzenAccordion>
             <Items>
                 <RadzenAccordionItem Text="Managed Schema" Icon="account_balance_wallet" Selected=true>
-                    <ManagedSchema Schema="@schema" />
+                    <ManagedSchema Schema="@GFile.ManagedSchema" />
                 </RadzenAccordionItem>
                     <RadzenAccordionItem Text="Raw Thrift Schema" Icon="account_balance_wallet">
-                        <ThriftView ThriftMeta="@thrift" />
+                        <ThriftView ThriftMeta="@GFile.ThriftMetadata" />
                     </RadzenAccordionItem>
             </Items>
         </RadzenAccordion>
     </RadzenCard>
 
 </p>
-}
-
-@if(error != null)
-{
-    <div class="alert alert-danger" role="alert">
-        @error
-    </div>
-}
-
-@code {
-    ParquetSchema? schema = null;
-    string? error = null;
-    Parquet.Thrift.FileMetaData? thrift = null;
-
-    async Task LoadFile(InputFileChangeEventArgs e) {
-        try
-        {
-            IBrowserFile file = e.File;
-            using (var bs = new BlazorFileStream(file, long.MaxValue))
-            {
-                using (var reader = await ParquetReader.CreateAsync(bs))
-                {
-                    schema = reader.Schema;
-                    thrift = reader.ThriftMetadata;
-                }
-            }
-
-            error = null;
-        }
-        catch(Exception ex)
-        {
-            error = ex.ToString();
-            schema = null;
-            thrift = null;
-        }
-    }
 }

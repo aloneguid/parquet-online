@@ -31,33 +31,4 @@
     public Parquet.Rows.Table? Table { get; set; }
 
     IEnumerable<int> pageSizeOptions = new int[] { 100, 500, 1000 };
-
-    public string DisplayValue(Field f, Row row, int fi)
-    {
-        if(f.SchemaType == SchemaType.Data && f is DataField df)
-        {
-            object value = row[fi];
-            if(df.IsArray)
-            {
-                var lst = new List<string>();
-                foreach(object iv in (IEnumerable)value)
-                {
-                    lst.Add(iv?.ToString() ?? "<null>");
-                }
-
-                return string.Join(";", lst);
-            }
-            return value?.ToString() ?? "<null>";
-        }
-        else if(f.SchemaType == SchemaType.List && f is ListField lf)
-        {
-            object value = row[fi];
-
-            return lf.Item.ToString();
-        }
-        else
-        {
-            return f.SchemaType.ToString();
-        }
-    }
 }

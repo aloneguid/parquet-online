@@ -1,5 +1,6 @@
 ﻿@using Parquet.Rows;
 @using Parquet.Schema;
+@using System.Collections;
 
 @if(Field != null)
 {
@@ -7,13 +8,22 @@
     {
         if(Field is DataField df)
         {
+            object? v = Row?[ValueIndex];
+
             if(df.IsArray)
             {
-                <strong>todo: arrays</strong>
+                <div class="d-flex flex-row">
+                    @if(v is IEnumerable ie)
+                    {
+                        foreach(object? iv in ie)
+                        {
+                            <div class="border p-1 m-1">@iv</div>
+                        }
+                    }
+                </div>
             }
             else
             {
-                object? v = Row?[ValueIndex]?.ToString();
                 if(v == null)
                 {
                     <i>null</i>
@@ -25,27 +35,17 @@
             }
         }
     }
-    else if(Field.SchemaType == SchemaType.Struct)
+    else if(Field.SchemaType == SchemaType.Struct || Field.SchemaType == SchemaType.Map)
     {
-        if(Field is StructField sf)
+        if(Row?[ValueIndex] is Row r1)
         {
-            Row structRow = (Row)Row[ValueIndex];
-            string jsonString = structRow.ToString("j");
-
-            @jsonString
-
-            /*for(int i = 0; i < sf.Fields.Count; i++)
-            {
-                int fii = i;
-                Field f = sf.Fields[i];
-                <strong>@(f.Name):</strong>
-                <RowValue Row=@structRow ValueIndex=@fii Field=@f/><br/>
-            }*/
+            string jsonString = r1.ToString("j");
+            <span class="pretty-json">@jsonString</span>
         }
     }
     else
     {
-        <strong>@Field.SchemaType</strong>
+        <strong>todo: @Field.SchemaType</strong>
     }
 }
 
