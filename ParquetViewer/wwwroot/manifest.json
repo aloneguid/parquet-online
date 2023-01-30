@@ -1,6 +1,7 @@
 {
-    "name": "ParquetViewer",
+    "name": "Apache Parquet Viewer",
     "short_name": "ParquetViewer",
+    "description": "A simple viewer for Apache Parquet files (.parquet) based on the great .NET open-source library https://github.com/aloneguid/parquet-dotnet.",
     "start_url": "https://parquetdbg.aloneguid.uk/",
     "display": "standalone",
     "background_color": "#ffffff",
