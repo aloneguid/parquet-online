@@ -6,30 +6,51 @@
     <RadzenHeader>
         <div class="row justify-content-start align-items-center">
             <div class="col-5 d-flex align-items-center">
-                <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
-                <RadzenImage Path="icon-192.png" width="30"/>&nbsp;
-                <RadzenLabel Text="Parquet Viewer" Style="overflow:hidden; white-space: nowrap; text-overflow: ellipsis;" />
+                <RadzenImage Path="icon-192.png" width="30" class="m-2"/>&nbsp;
+                <RadzenText Style="overflow:hidden; white-space: nowrap; text-overflow: ellipsis;" class="m-2" TextStyle="TextStyle.DisplayH6">
+                    Apache Parquet Viewer
+                </RadzenText>
+                <!--
+                @if (GFile.HasFile)
+                {
+                    <RadzenButton Text="clear" Size="ButtonSize.Small" Click=@ClearAsync/>
+                }
+                -->
             </div>
             <div class="col-7 d-flex align-items-center justify-content-end">
-                <iframe src="https://ghbtns.com/github-btn.html?user=aloneguid&repo=parquet-online&type=star&count=true&size=large" frameborder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="m-1 me-3">
+                    <RadzenLink Target="https://github.com/aloneguid/parquet-dotnet">Parquet.Net</RadzenLink>
+                    <RadzenLink Target="@parquetNetReleasePageUrl">@Globals.Version</RadzenLink>
+                </RadzenText>
+                <!-- Place this tag where you want the button to render. -->
+                <div class="m-2 mt-3">
+                    <iframe src="https://ghbtns.com/github-btn.html?user=aloneguid&repo=parquet-online&type=star&count=true"
+                        frameborder="0" scrolling="0" width="80" height="20" title="GitHub"></iframe>
+                </div>
             </div>
 
         </div>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded" Style="width: 200px">
-        <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Viewer" Icon="table_view" Path="/" />
-            <RadzenPanelMenuItem Text="Schema" Icon="schema" Path="/schema" />
-            <RadzenPanelMenuItem Text="About" Icon="account_box" Path="/about" />
-        </RadzenPanelMenu>
-    </RadzenSidebar>
-    <RadzenBody>
-        <div class="p-2">
-            @Body
-        </div>
+    <RadzenBody class="m-0 p-0">
+        @Body
     </RadzenBody>
 </RadzenLayout>
 
 @code {
     bool sidebarExpanded = false;
+    string parquetNetReleasePageUrl = $"https://github.com/aloneguid/parquet-dotnet/releases/tag/{Globals.Version}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        GFile.OnFileLoaded += fileName =>
+        {
+            StateHasChanged();
+        };
+    }
+
+    async Task ClearAsync(MouseEventArgs args)
+    {
+        GFile.Clear();
+        StateHasChanged();
+    }
 }

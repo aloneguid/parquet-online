@@ -7,94 +7,38 @@
 @using System.Text;
 @using Toolbelt.Blazor.FileDropZone
 
-<PageTitle>Viewer</PageTitle>
+<PageTitle>Apache Parquet Viewer</PageTitle>
 
-@if(isLoading)
+@if (GFile.HasFile)
 {
-    <RadzenCard>
-        <RadzenText TextStyle="TextStyle.Subtitle2">@loadStatus</RadzenText>
-        <RadzenProgressBar Max="100" @bind-Value=@loadValue/>
-    </RadzenCard>
+<RadzenSplitter Orientation="Orientation.Horizontal">
+    <RadzenSplitterPane Size="300px">
+        <RadzenAccordion Multiple=true>
+            <Items>
+                <RadzenAccordionItem Text="Basic Information" Icon="info">
+                    <BasicFileInfo/>
+                </RadzenAccordionItem>
+                <RadzenAccordionItem Text="Schema Information" Icon="schema">
+                    <ManagedSchema Schema="@GFile.ManagedSchema"/>
+                </RadzenAccordionItem>
+                <RadzenAccordionItem Text="Low Level Metadata" Icon="more">
+                    <ThriftView ThriftMeta=@GFile.ThriftMetadata/>
+                </RadzenAccordionItem>
+            </Items>
+        </RadzenAccordion>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane>
+        <DataView/>
+    </RadzenSplitterPane>
+</RadzenSplitter>
 }
 
-@if(GFile.HasFile)
-{
- <p>
-    <RadzenText TextStyle="TextStyle.DisplayH6" Style="display: inline;">@GFile.FileName</RadzenText>
-    @GFile.FileSize.Value.Bytes()
-</p>
-}
-
-<p>
-    <DataView Table="@GFile.Table"/>
-</p>
-
-<p>
-    @if(!GFile.HasFile)
-    {
-        <RadzenCard>
-            <RadzenText>This application opens .parquet files for viewing and works completely on client side. Click the button below to navigate and open a file.</RadzenText>
-        </RadzenCard>
-        <br />
-    }
-
-    <RadzenCard>
-        <FileOpener OnFileOpened=@OnFileOpened />
-    </RadzenCard>
-</p>
-
-@if(error != null)
-{
-    <div class="alert alert-danger" role="alert">
-        @error
-    </div>
-}
+<FileOpener/>
 
 @code {
-    string? error = null;
 
-    bool isLoading = false;
-    string? loadStatus = null;
-    double loadValue = 0;
-
-    async Task OnFileOpened(MouseEventArgs args)
+    protected override async Task OnInitializedAsync()
     {
-        //await GFile.Clear();
-        //StateHasChanged();
-        Console.WriteLine("opened event");
-
-        isLoading = true;
-        loadValue = 0;
-        loadStatus = "checking file...";
-        try
-        {
-            error = null;
-
-            using (var reader = await ParquetReader.CreateAsync(GFile.RandomAccessStream!, new ParquetOptions {TreatByteArrayAsString = true}))
-            {
-                loadStatus = "loading schema...";
-                GFile.ManagedSchema = reader.Schema;
-                GFile.ThriftMetadata = reader.ThriftMetadata;
-
-                var tmpTable = await reader.ReadAsTableAsync(async (int perc, string message) =>
-                {
-                    loadValue = perc;
-                    loadStatus = message;
-                    StateHasChanged();
-                });
-                GFile.Table = tmpTable;
-                loadStatus = "rendering...";
-                StateHasChanged();
-            }
-
-        }
-        catch(Exception ex)
-        {
-            error = ex.ToString();
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        GFile.OnFileLoaded += _ => StateHasChanged();
     }
 }

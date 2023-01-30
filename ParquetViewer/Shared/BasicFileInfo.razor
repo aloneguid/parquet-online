@@ -1,0 +1,13 @@
+﻿@using Humanizer;
+
+@if (GFile.HasFile)
+{
+<RadzenText TextStyle="TextStyle.Subtitle2">File Name:</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2">@GFile.FileName</RadzenText>
+
+<RadzenText TextStyle="TextStyle.Subtitle2">File Size:</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2">@GFile.FileSize.Value.Bytes()</RadzenText>
+
+<RadzenText TextStyle="TextStyle.Subtitle2">Total Row Count:</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2">@GFile.ThriftMetadata.Num_rows</RadzenText>
+}

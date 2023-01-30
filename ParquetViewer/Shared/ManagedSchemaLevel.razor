@@ -1,0 +1,52 @@
+﻿@using Parquet.Schema;
+
+<RadzenDataGrid TItem="Field" Data=@Fields Density="Density.Compact" AllowColumnResize="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="Field" Title="Name" Property="Name"/>
+        <RadzenDataGridColumn TItem="Field" Title="Type">
+            <Template Context="f">
+                @if(f is DataField df)
+                {
+                    @GetTypeName(df)
+                }
+                else if(f is MapField mf)
+                {
+                    <strong>Map</strong>
+                    <ManagedSchemaLevel Fields=@(new Field[] { mf.Key, mf.Value})/>
+                }
+                else if(f is ListField lf)
+                {
+                    <strong>List</strong>
+                    <ManagedSchemaLevel Fields=@(new Field[] { lf.Item })/>
+                }
+                else if(f is StructField sf)
+                {
+                    <strong>Struct</strong>
+                    <ManagedSchemaLevel Fields=@sf.Fields/>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Field" Title="Path" Property="Path" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<Field>? Fields { get; set; }
+
+    public string GetTypeName(DataField df)
+    {
+        string s = df.ClrType.ToString();
+        s = s.Replace("System.", "");
+        if(df.IsNullable)
+        {
+            s += "?";
+        }
+        if(df.IsArray)
+        {
+            s += "[]";
+        }
+        return s;
+    }
+
+}

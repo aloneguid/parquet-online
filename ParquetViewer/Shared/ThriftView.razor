@@ -1,19 +1,19 @@
 ﻿@using Parquet.Schema;
 @using System.Reflection;
 @using System.Collections;
+@using System.Text.Json;
 
 @if(ThriftMeta != null)
 {
-<RadzenSplitter>
-    <RadzenSplitterPane>
-        <RadzenTree Data="@Propertise(ThriftMeta)" Expand=@LoadFields @bind-Value=@selection Change=@OnChange Style="width: 100%;">
-            <RadzenTreeLevel Text=@GetTextForField Template=@FieldTemplate />
-        </RadzenTree>
-    </RadzenSplitterPane>
-    <RadzenSplitterPane>
-        <RadzenTextArea Class="w-100" @bind-Value=@longValue Rows="10"/>
-    </RadzenSplitterPane>
-</RadzenSplitter>
+    <div style="overflow: scroll; max-height: 800px;">
+        <pre>
+            @GetFormattedJson()
+        </pre>
+    </div>
+}
+else
+{
+    <strong>no thrift</strong>
 }
 
 @code {
@@ -21,113 +21,10 @@
     [Parameter]
     public Parquet.Thrift.FileMetaData? ThriftMeta { get; set; }
 
-    object? selection;
-    string? longValue;
-
-    void OnChange()
+    public string? GetFormattedJson()
     {
-        if (!(selection is KeyValuePair<string, object?> kvp) || !IsValue(kvp.Value)) return;
+        if (ThriftMeta == null) return null;
 
-        longValue = kvp.Value?.ToString() ?? "";
-    }
-
-    Dictionary<string, object?>? Propertise(object? o)
-    {
-        if (o == null) return null;
-        var result = new Dictionary<string, object?>();
-
-        foreach(PropertyInfo pi in o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.Public))
-        {
-            try
-            {
-                result[pi.Name] = pi.GetValue(o);
-            }
-            catch(Exception ex)
-            {
-                result[pi.Name] = "cannot get value: " + ex;
-            }
-        }
-
-        return result;
-    }
-
-    void LoadFields(TreeExpandEventArgs args)
-    {
-        if (!(args.Value is KeyValuePair<string, object?> kvp)) return;
-
-        var children = new Dictionary<string, object?>();
-
-        if (IsList(kvp.Value))
-        {
-            int i = 0;
-            foreach (object li in (IEnumerable)kvp.Value)
-            {
-                children[$"{++i}"] = li;
-            }
-        }
-        else if(!IsValue(kvp.Value))
-        {
-            children = Propertise(kvp.Value);
-        }
-
-
-        args.Children.Text = GetTextForField;
-        args.Children.HasChildren = (kkk) => children.Count > 0;
-        args.Children.Template = FieldTemplate;
-        args.Children.Data = children;
-    }
-
-    string GetTextForField(object data)
-    {
-        if (data is KeyValuePair<string, object> kvp) return kvp.Key;
-        return "?";
-    }
-
-    RenderFragment<RadzenTreeItem> FieldTemplate = (context) => builder =>
-    {
-        if (!(context.Value is KeyValuePair<string, object?> kvp)) return;
-
-        string icon = "tag";
-        object v = kvp.Value;
-
-        if(IsValue(v))
-        {
-            icon = "fiber_manual_record";
-        }
-        else if(IsList(v))
-        {
-            icon = "list";
-        }
-
-        builder.OpenComponent<RadzenIcon>(0);
-        builder.AddAttribute(1, nameof(RadzenIcon.Icon), icon);
-        builder.CloseComponent();
-        builder.AddContent(3, context.Text);
-
-        if(IsValue(v))
-        {
-            string sv = v?.ToString() ?? "";
-            if (sv.Length > 10)
-                sv = sv.Substring(0, 10) + "...";
-            builder.AddMarkupContent(4, $":&nbsp; <strong>{sv}</strong>");
-        }
-        else if(IsList(v))
-        {
-            builder.AddMarkupContent(4, $"&nbsp; (<i>list</i>)");
-        }
-    };
-
-    static bool IsValue(object v)
-    {
-        if (v == null) return true;
-        Type t = v.GetType();
-        return t == typeof(string) || t == typeof(int) || t == typeof(long) || t == typeof(byte[]) || t.IsEnum;
-    }
-
-    static bool IsList(object v)
-    {
-        if (v == null || !v.GetType().IsGenericType) return false;
-
-        return v.GetType().GetGenericTypeDefinition() == typeof(List<>);
+        return JsonSerializer.Serialize(ThriftMeta, new JsonSerializerOptions { WriteIndented = true });
     }
 }

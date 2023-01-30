@@ -1,5 +1,4 @@
-﻿using KristofferStrube.Blazor.FileSystem;
-using Parquet.Rows;
+﻿using Parquet;
 using Parquet.Schema;
 using Parquet.Thrift;
 using ParquetViewer.WebAdapters;
@@ -27,6 +26,13 @@ namespace ParquetViewer {
             HasFile = true;
 
             Console.WriteLine($"opened {FileName} ({FileSize})");
+
+            using(ParquetReader reader = await ParquetReader.CreateAsync(_stream)) {
+                ManagedSchema = reader.Schema;
+                ThriftMetadata = reader.ThriftMetadata;
+            }
+
+            OnFileLoaded?.Invoke(FileName);
         }
 
         public static bool HasFile { get; private set; }
@@ -37,21 +43,22 @@ namespace ParquetViewer {
 
         public static Stream? RandomAccessStream { get; private set; }
 
-        public static Table? Table { get; set; }
-
         public static ParquetSchema? ManagedSchema { get; set; }
 
         public static FileMetaData? ThriftMetadata { get; set; }
 
+        public static event Action<string?>? OnFileLoaded;
+
         public static async Task Clear() {
             FileName = null;
             FileSize = 0;
+            HasFile = false;
             if(RandomAccessStream != null) {
                 await RandomAccessStream.DisposeAsync();
             }
-            Table = null;
             ManagedSchema = null;
             ThriftMetadata = null;
+            OnFileLoaded?.Invoke(null);
         }
     }
 }

@@ -2,33 +2,106 @@
 @using Parquet.Schema;
 @using System.Reflection;
 @using System.Collections;
+@using Parquet;
 
 <!-- https://blazor.radzen.com/datagrid-dynamic -->
 @if (Table != null)
 {
-    <RadzenCard>
-        <RadzenDataGrid TItem="Row" Data=@Table AllowColumnReorder="true" AllowColumnResize="true" Density="Density.Compact"
-            AllowPaging="true" PageSizeOptions=@pageSizeOptions PageSize="100">
-            <Columns>
-                @for(int i = 0; i < Table.Schema.Fields.Count; i++)
-                {
-                    Field f = Table.Schema.Fields[i];
-                    int fi = i;
-                    <RadzenDataGridColumn TItem="Row" Title="@f.Name">
-                        <Template>
-                            <RowValue Field=@f Row=@context ValueIndex=@fi/>
-                        </Template>
-                    </RadzenDataGridColumn>
-                }
-            </Columns>
-        </RadzenDataGrid>
-    </RadzenCard>
+    <RadzenDataGrid TItem="Row" Data=@Table AllowColumnReorder="true" AllowColumnResize="true" Density="Density.Compact"
+        AllowPaging="true" PageSizeOptions=@pageSizeOptions PageSize="100"
+        class="h-100">
+        <Columns>
+            @for(int i = 0; i < Table.Schema.Fields.Count; i++)
+            {
+                Field f = Table.Schema.Fields[i];
+                int fi = i;
+                <RadzenDataGridColumn TItem="Row" Title="@f.Name">
+                    <Template>
+                        <RowValue Field=@f Row=@context ValueIndex=@fi/>
+                    </Template>
+                </RadzenDataGridColumn>
+            }
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    @if (isLoading)
+    {
+        <div class="h-100 d-flex d-justify-content-center align-items-center">
+            <div class="container w-50">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">@loadStatus</RadzenText>
+                    <RadzenProgressBar Max="100" @bind-Value=@loadValue />
+                </RadzenCard>
+            </div>
+        </div>
+
+    }
+}
+
+@if (error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @error
+    </div>
 }
 
 @code {
+    string? error = null;
+    bool isLoading = false;
+    string? loadStatus = null;
+    double loadValue = 0;
 
-    [Parameter]
-    public Parquet.Rows.Table? Table { get; set; }
+    Parquet.Rows.Table? Table { get; set; }
 
     IEnumerable<int> pageSizeOptions = new int[] { 100, 500, 1000 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("DataView::OnInitializedAsync");
+
+        if (GFile.HasFile) LoadDataAsync();
+
+        GFile.OnFileLoaded += _ => LoadDataAsync();
+    }
+
+    public async Task LoadDataAsync()
+    {
+        Console.WriteLine("DataView::LoadDataAsync");
+
+        isLoading = true;
+        loadValue = 0;
+        loadStatus = "checking file...";
+        error = null;
+        StateHasChanged();
+
+        try
+        {
+            error = null;
+
+            using (var reader = await ParquetReader.CreateAsync(GFile.RandomAccessStream!, new ParquetOptions {TreatByteArrayAsString = true}))
+            {
+                var tmpTable = await reader.ReadAsTableAsync(async (int perc, string message) =>
+                {
+                    loadValue = perc;
+                    loadStatus = message;
+                    StateHasChanged();
+                });
+                Table = tmpTable;
+                loadStatus = "rendering...";
+                StateHasChanged();
+            }
+
+        }
+        catch(Exception ex)
+        {
+            error = ex.ToString();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        StateHasChanged();
+    }
 }

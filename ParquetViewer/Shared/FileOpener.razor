@@ -4,7 +4,25 @@
 @using ParquetViewer.WebAdapters;
 @inject IFileSystemAccessService FileSystemAccessService;
 
-<RadzenButton Text="Open .parquet file" Click=@OpenParquetFile/>
+@if (!GFile.HasFile || isLoading)
+{
+    <div class="h-100 d-flex d-justify-content-center align-items-center">
+        <div class="container w-25">
+
+            @if (isLoading)
+            {
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">@status</RadzenText>
+                    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                </RadzenCard>
+            }
+            else
+            {
+                <RadzenButton Text="open from local disk" Click=@OpenParquetFile/>
+            }
+        </div>
+    </div>
+}
 
 @if (error != null)
 {
@@ -15,15 +33,25 @@
 
 @code {
 
+    bool isLoading = false;
+    string status = "";
     string? error = null;
 
-    [Parameter]
-    public EventCallback<MouseEventArgs> OnFileOpened { get; set; }
+    //[Parameter]
+    //public EventCallback<MouseEventArgs> OnFileOpened { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        GFile.OnFileLoaded += _ => StateHasChanged();
+    }
 
     public async Task OpenParquetFile(MouseEventArgs args)
     {
         FileSystemFileHandle? fileHandle = null;
         error = null;
+        isLoading = true;
+        status = "accessing local disc...";
+        StateHasChanged();
         try
         {
             var options = new OpenFilePickerOptionsStartInWellKnownDirectory
@@ -39,8 +67,7 @@
                         }
                     },
                 },
-                Multiple = false,
-                StartIn = WellKnownDirectory.Downloads
+                Multiple = false
             };
             FileSystemFileHandle[]? fileHandles = await FileSystemAccessService.ShowOpenFilePickerAsync(options);
             fileHandle = fileHandles.Single();
@@ -53,11 +80,15 @@
         {
             if(fileHandle != null)
             {
+                status = "reading metadata...";
+                StateHasChanged();
                 KristofferStrube.Blazor.FileAPI.File file = await fileHandle.GetFileAsync();
                 await GFile.InitFile(file);
                 StateHasChanged();
-                await OnFileOpened.InvokeAsync(null);
+                //await OnFileOpened.InvokeAsync(null);
             }
+            isLoading = false;
+            StateHasChanged();
         }
     }
 }
