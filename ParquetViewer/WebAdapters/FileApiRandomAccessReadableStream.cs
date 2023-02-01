@@ -9,6 +9,8 @@ namespace ParquetViewer.WebAdapters {
         private Blob? _b;
         private readonly long _length;
         private long _position;
+        private int _jsCallCount;
+        private const bool Log = false;
 
         private FileApiRandomAccessReadableStream(KristofferStrube.Blazor.FileAPI.File f, long length) {
             _f = f;
@@ -36,6 +38,9 @@ namespace ParquetViewer.WebAdapters {
         public override Task FlushAsync(CancellationToken cancellationToken) {
             if(_rs != null)
                 return _rs.FlushAsync();
+            if(Log)
+                Console.WriteLine("flush");
+            _jsCallCount++;
             return Task.CompletedTask;
         }
 
@@ -47,19 +52,16 @@ namespace ParquetViewer.WebAdapters {
                 await CloseAll();
             }
 
-            //if(_rs == null) {
-            //    Console.WriteLine($"slicing to {_position}");
-            //    _b = await _f.SliceAsync(_position);
-            //    _rs = await _b.StreamAsync();
-            //}
-
             int read = 0;
 
             try {
                 // create slice
-                //Console.WriteLine($"slicing to {_position}/{count}");
+                if(Log) {
+                    Console.WriteLine($"slicing to {_position}/{count}");
+                }
                 _b = await _f.SliceAsync(_position, _position + count);
                 _rs = await _b.StreamAsync();
+                _jsCallCount++;
 
                 // read slice
                 //Console.WriteLine($"reading {offset}/{count}; buf len: {buffer.Length}");
@@ -67,7 +69,9 @@ namespace ParquetViewer.WebAdapters {
                 _position += read;
                 //Console.WriteLine($"read {read}b, pos: {_position}");
             } finally {
-                //Console.WriteLine("unslicing");
+                if(Log) {
+                    Console.WriteLine("unslicing");
+                }
                 await CloseAll();
             }
 
@@ -75,7 +79,9 @@ namespace ParquetViewer.WebAdapters {
         }
 
         public override long Seek(long offset, SeekOrigin origin) {
-            //Console.WriteLine($"seek: {origin} -> {offset}");
+            if(Log) {
+                Console.WriteLine($"seek: {origin} -> {offset}");
+            }
             switch(origin) {
                 case SeekOrigin.Begin:
                     _position = offset;
@@ -98,11 +104,13 @@ namespace ParquetViewer.WebAdapters {
         async Task CloseAll() {
             if(_rs != null) {
                 await _rs.DisposeAsync();
+                _jsCallCount++;
                 _rs = null;
             }
 
             if(_b != null) {
                 await _b.DisposeAsync();
+                _jsCallCount++;
                 _b = null;
             }
         }

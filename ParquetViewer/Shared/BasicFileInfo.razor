@@ -6,8 +6,11 @@
 <RadzenText TextStyle="TextStyle.Body2">@GFile.FileName</RadzenText>
 
 <RadzenText TextStyle="TextStyle.Subtitle2">File Size:</RadzenText>
-<RadzenText TextStyle="TextStyle.Body2">@GFile.FileSize.Value.Bytes()</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2">@(GFile.FileSize == null ? "" : GFile.FileSize.Value.Bytes())</RadzenText>
 
-<RadzenText TextStyle="TextStyle.Subtitle2">Total Row Count:</RadzenText>
-<RadzenText TextStyle="TextStyle.Body2">@GFile.ThriftMetadata.Num_rows</RadzenText>
+    @if (GFile.ThriftMetadata != null)
+    {
+        <RadzenText TextStyle="TextStyle.Subtitle2">Total Row Count:</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">@GFile.ThriftMetadata.Num_rows</RadzenText>
+    }
 }

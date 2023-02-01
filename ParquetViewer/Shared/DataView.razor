@@ -1,4 +1,5 @@
-﻿@using Parquet.Rows;
+﻿@implements IDisposable
+@using Parquet.Rows;
 @using Parquet.Schema;
 @using System.Reflection;
 @using System.Collections;
@@ -9,6 +10,7 @@
 {
     <RadzenDataGrid TItem="Row" Data=@Table AllowColumnReorder="true" AllowColumnResize="true" Density="Density.Compact"
         AllowPaging="true" PageSizeOptions=@pageSizeOptions PageSize="100"
+        SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true"
         class="h-100">
         <Columns>
             @for(int i = 0; i < Table.Schema.Fields.Count; i++)
@@ -63,11 +65,24 @@ else
 
         if (GFile.HasFile) LoadDataAsync();
 
-        GFile.OnFileLoaded += _ => LoadDataAsync();
+        Console.WriteLine("DataView::+");
+        GFile.OnFileLoaded += FileLoaded;
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine("DataView::-");
+        GFile.OnFileLoaded -= FileLoaded;
+    }
+
+    public void FileLoaded(string? file)
+    {
+        LoadDataAsync();
     }
 
     public async Task LoadDataAsync()
     {
+        if (!GFile.HasFile) return;
         Console.WriteLine("DataView::LoadDataAsync");
 
         isLoading = true;

@@ -10,12 +10,10 @@
                 <RadzenText Style="overflow:hidden; white-space: nowrap; text-overflow: ellipsis;" class="m-2" TextStyle="TextStyle.DisplayH6">
                     Apache Parquet Viewer
                 </RadzenText>
-                <!--
                 @if (GFile.HasFile)
                 {
                     <RadzenButton Text="clear" Size="ButtonSize.Small" Click=@ClearAsync/>
                 }
-                -->
             </div>
             <div class="col-7 d-flex align-items-center justify-content-end">
                 <RadzenText TextStyle="TextStyle.Subtitle2" class="m-1 me-3">
@@ -37,15 +35,20 @@
 </RadzenLayout>
 
 @code {
+    private bool _initialised = false;
     bool sidebarExpanded = false;
     string parquetNetReleasePageUrl = $"https://github.com/aloneguid/parquet-dotnet/releases/tag/{Globals.Version}";
 
     protected override async Task OnInitializedAsync()
     {
-        GFile.OnFileLoaded += fileName =>
+        if (!_initialised)
         {
-            StateHasChanged();
-        };
+            GFile.OnFileLoaded += fileName =>
+            {
+                StateHasChanged();
+            };
+            _initialised = true;
+        }
     }
 
     async Task ClearAsync(MouseEventArgs args)
