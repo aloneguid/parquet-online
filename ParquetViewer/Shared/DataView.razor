@@ -10,7 +10,12 @@
 {
     <RadzenDataGrid TItem="Row" Data=@Table AllowColumnReorder="true" AllowColumnResize="true" Density="Density.Compact"
         AllowPaging="true" PageSizeOptions=@pageSizeOptions PageSize="100"
+
         SelectionMode="DataGridSelectionMode.Single" AllowRowSelectOnRowClick="true"
+
+        AllowFiltering="true"
+        FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" LogicalFilterOperator="LogicalFilterOperator.And"
+
         class="h-100">
         <Columns>
             @for(int i = 0; i < Table.Schema.Fields.Count; i++)

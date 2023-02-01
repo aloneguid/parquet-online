@@ -3,6 +3,8 @@ A very experimental, early stages Parquet Viewer using [Parquet.Net](https://git
 
 Parquet Viewer works completely in browser as Web Assembly application.
 
+At the moment is somewhat sluggish due to the way random file access interop between browser and filesystem works, but this will improve dramatically in the future, so feel free to bookmark this page.
+
 Hosted at https://parquetdbg.aloneguid.uk/.
 
 Screenshot:
@@ -13,12 +15,12 @@ Screenshot:
 
 - View Schema as Parquet.Net sees it.
 
-- Display raw thrift schema
-- Display parquet internal structure
-- View parquet data
+- Display raw thrift schema.
+- Display parquet internal structure.
+- View parquet data.
+- View complex types.
 
 ## Roadmap
 
-- View complex types (lists, maps, structs) - some are already supported
-- View large files
-- Specify options before opening files
+- Specify options before opening files.
+- View truly massive files.

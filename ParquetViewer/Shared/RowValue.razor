@@ -52,7 +52,17 @@
             <ul>
                 @foreach(object lri in lr)
                 {
-                    <li><span class="pretty-json">@(((Row)lri).ToString("j"))</span></li>
+                    <li>
+                    @if(lri is Row row)
+                    {
+                            <span class="pretty-json">@(row.ToString("j"))</span>
+                        }
+                        else
+                        {
+                            var fakeRow = new Row(lri);
+                            <RowValue Row=@fakeRow ValueIndex=0 Field=@lf.Item></RowValue>
+                    }
+                    </li>
                 }
             </ul>
         }
