@@ -43,9 +43,27 @@
             <span class="pretty-json">@jsonString</span>
         }
     }
+    else if(Field.SchemaType == SchemaType.List && Field is ListField lf)
+    {
+        object? value = Row?[ValueIndex];
+
+        if(value is object[] lr)
+        {
+            <ul>
+                @foreach(object lri in lr)
+                {
+                    <li><span class="pretty-json">@(((Row)lri).ToString("j"))</span></li>
+                }
+            </ul>
+        }
+        else
+        {
+            <span>unexpected type:</span><strong>@(value.GetType())</strong>
+        }
+    }
     else
     {
-        <strong>todo: @Field.SchemaType</strong>
+        <strong>todo1: @Field.SchemaType</strong>
     }
 }
 
