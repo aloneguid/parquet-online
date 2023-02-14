@@ -7,7 +7,7 @@ using ParquetViewer;
 #if DEBUG
 Tracker.Instance = new Tracker("parquetdbg", "dev");
 #else
-Tracker.Instance = new Tracker("parquetdbg", Parquet.Globals.Version);
+Tracker.Instance = new Tracker("parquetdbg", Config.Version);
 #endif
 
 await Tracker.Instance.Track("start");
