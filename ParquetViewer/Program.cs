@@ -4,7 +4,12 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ParquetViewer;
 
+#if DEBUG
+Tracker.Instance = new Tracker("parquetdbg", "dev");
+#else
 Tracker.Instance = new Tracker("parquetdbg", Parquet.Globals.Version);
+#endif
+
 await Tracker.Instance.Track("start");
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
