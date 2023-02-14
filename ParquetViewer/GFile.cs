@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using LP.Domain;
+using Parquet;
 using Parquet.Schema;
 using Parquet.Thrift;
 using ParquetViewer.WebAdapters;
@@ -22,6 +23,10 @@ namespace ParquetViewer {
 
             FileName = await file.GetNameAsync();
             FileSize = (long)(await file.GetSizeAsync());
+
+            await Tracker.Instance.Track("fileOpen", new Dictionary<string, string> {
+                { "size", FileSize.ToString()! }
+            });
 
             HasFile = true;
 
