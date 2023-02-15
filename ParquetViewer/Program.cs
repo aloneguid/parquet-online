@@ -1,5 +1,4 @@
 using KristofferStrube.Blazor.FileSystemAccess;
-using LP.Domain;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ParquetViewer;
@@ -9,6 +8,7 @@ Tracker.Instance = new Tracker("parquetdbg", "dev");
 #else
 Tracker.Instance = new Tracker("parquetdbg", Config.Version);
 #endif
+Tracker.Instance.Constants["parquet.net"] = Parquet.Globals.Version;
 
 await Tracker.Instance.Track("start");
 
